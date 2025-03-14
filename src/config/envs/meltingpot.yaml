@@ -1,0 +1,21 @@
+env: "meltingpot"
+
+env_args:
+  render_observation: "WORLD.RGB"
+  config_overrides: {}
+  game_ascii_map: None
+  substrate_name: "clean_up"
+  time_limit: 200
+  fps: 8
+  action_possibility: 0.1
+  action_latency: 5
+
+
+common_reward: True
+test_greedy: True
+test_nepisode: 100
+test_interval: 50000
+log_interval: 50000
+runner_log_interval: 10000
+learner_log_interval: 10000
+t_max: 2050000

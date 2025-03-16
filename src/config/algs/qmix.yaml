@@ -3,10 +3,10 @@
 # ------------------------------------------------------------------------------
 name: "qmix"
 
-runner: "episode"
-batch_size_run: 1
-#runner: "parallel"
-#batch_size_run: 8
+#runner: "episode"
+#batch_size_run: 1
+runner: "parallel"
+batch_size_run: 8
 
 mac: "basic_mac" # Basic controller
 agent: "rnn" # Default rnn agent

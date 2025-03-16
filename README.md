@@ -7,7 +7,7 @@ Added melting-pot clean_up
 
 use
 ```
-python src/main.py --config=meltingpot --env-config=gymma with env_args.substrate_name='clean_up'
+python src/main.py --config=qmix --env-config=meltingpo with env_args.substrate_name='clean_up'
 ```
 
 clean_up config:

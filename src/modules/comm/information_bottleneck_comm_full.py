@@ -9,9 +9,9 @@ class IBFComm(nn.Module):
 		self.args = args
 		self.n_agents = args.n_agents
 
-		self.fc1 = nn.Linear(input_shape, args.rnn_hidden_dim)
-		self.fc2 = nn.Linear(args.rnn_hidden_dim, args.rnn_hidden_dim)
-		self.fc3 = nn.Linear(args.rnn_hidden_dim, args.comm_embed_dim * self.n_agents)
+		self.fc1 = nn.Linear(input_shape, args.hidden_dim)
+		self.fc2 = nn.Linear(args.hidden_dim, args.hidden_dim)
+		self.fc3 = nn.Linear(args.hidden_dim, args.comm_embed_dim * self.n_agents)
 
 		self.inference_model = nn.Sequential(
 			nn.Linear(input_shape + args.comm_embed_dim * self.n_agents, 4 * args.comm_embed_dim * self.n_agents),
@@ -28,6 +28,7 @@ class IBFComm(nn.Module):
 
 		mu = gaussian_params
 		#sigma = F.softplus(gaussian_params[:, self.args.comm_embed_dim * self.n_agents:])
-		sigma = th.ones(mu.shape).cuda()
+		# sigma = th.ones(mu.shape).cuda()
+		sigma = th.ones(mu.shape)
 
 		return mu, sigma

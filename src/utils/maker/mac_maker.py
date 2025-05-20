@@ -65,24 +65,29 @@ class MACMaker(Maker):
 
     @staticmethod
     def make_maic_mac(*args, **kwargs) -> MAC:
-        """Entity agent using attention to merge obs."""
+        """MAIC."""
         from controllers.maic_controller import MAICMAC
         return MAICMAC(*args, **kwargs)
 
     @staticmethod
     def make_cacom_mac(*args, **kwargs) -> MAC:
-        """Entity agent using attention to merge obs."""
+        """CACOM."""
         from controllers.cacom_controller import CACOM_MAC
         return CACOM_MAC(*args, **kwargs)
 
     @staticmethod
     def make_tmac_p2p_comm_mac(*args, **kwargs) -> MAC:
-        """Entity agent using attention to merge obs."""
+        """T2MAC."""
         from controllers.tmac_p2p_comm_controller import VffacMAC
         return VffacMAC(*args, **kwargs)
 
     @staticmethod
     def make_basic_mac_7(*args, **kwargs) -> MAC:
-        """A more efficient BasicMAC along with new q learner."""
+        """TMC."""
         from controllers.basic_controller_7 import BasicMAC_7
         return BasicMAC_7(*args, **kwargs)
+
+    def make_cate_broadcast_comm_mac_full(*args, **kwargs) -> MAC:
+        """NDQ."""
+        from controllers.cate_broadcast_comm_controller_full import CateBCommFMAC
+        return CateBCommFMAC(*args, **kwargs)

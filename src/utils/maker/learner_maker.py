@@ -76,24 +76,30 @@ class LearnerMaker(Maker):
 
     @staticmethod
     def make_maic_learner(*args, **kwargs) -> 'Learner':
-        """Entity agent using attention to merge obs."""
+        """MAIC."""
         from learners.maic_learner import MAICLearner
         return MAICLearner(*args, **kwargs)
 
     @staticmethod
     def make_cacom_learner(*args, **kwargs) -> 'Learner':
-        """Entity agent using attention to merge obs."""
+        """CACOM."""
         from learners.cacom_learner import CACOM_Learner
         return CACOM_Learner(*args, **kwargs)
 
     @staticmethod
     def make_tmac_p2p_comm_learner(*args, **kwargs) -> 'Learner':
-        """Entity agent using attention to merge obs."""
+        """T2MAC."""
         from learners.tmac_p2p_comm_learner import QLearner
         return QLearner(*args, **kwargs)
 
     @staticmethod
     def make_q_learner_7(*args, **kwargs) -> 'Learner':
-        """A more efficient BasicMAC along with new q learner."""
+        """TMC."""
         from learners.qmix_7 import QLearner_7
         return QLearner_7(*args, **kwargs)
+
+    @staticmethod
+    def make_cate_q_learner(*args, **kwargs) -> 'Learner':
+        """NDQ."""
+        from learners.categorical_q_learner import CateQLearner
+        return CateQLearner(*args, **kwargs)

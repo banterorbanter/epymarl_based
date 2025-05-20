@@ -37,7 +37,10 @@ class CateBCommFMAC:
 
 		self.is_print_once = False
 
-		if self.args.env_args['print_rew']:
+		self.sigma_buffer = [dict() for _ in range(args.n_agents)]
+		self.mu_buffer = [dict() for _ in range(args.n_agents)]
+
+		if getattr(self.args.env_args, 'print_rew', False):
 			self.c_step = 0
 			self.cut_mean_list = []
 			self.cut_mean_num_list = []
@@ -71,7 +74,7 @@ class CateBCommFMAC:
 		if self.args.comm:
 			agent_outputs, (mu, sigma), _, m_sample = self.test_forward(ep_batch, t_ep, test_mode=test_mode,
 			                                                            thres=thres, prob=prob)
-			if self.args.env_args['print_rew']:
+			if getattr(self.args.env_args, 'print_rew', False):
 				data = mu.detach().cpu().squeeze().numpy()
 				s = 0
 				s_num = 0
@@ -119,8 +122,8 @@ class CateBCommFMAC:
 		mu, sigma, logits, m_sample = None, None, None, None
 
 		if self.args.comm:
-			(mu, sigma), messages, m_sample = self._test_communicate(ep_batch.batch_size, agent_inputs,
-			                                                         thres=thres, prob=prob)
+			(mu, sigma), messages, m_sample = self._test_communicate(ep_batch.batch_size, agent_inputs, t,
+			                                                         thres=thres, prob=prob, test_mode=False)
 			agent_inputs = th.cat([agent_inputs, messages], dim=1)
 			logits = self._logits(ep_batch.batch_size, agent_inputs)
 
@@ -274,9 +277,30 @@ class CateBCommFMAC:
 		ms = ms.cuda()
 		return ms
 
-	def _test_communicate(self, bs, inputs, thres=0., prob=0.):
+	def _test_communicate(self, bs, inputs, t, thres=0., prob=0., test_mode=False):
 		# shape = (bs * self.n_agents, -1)
 		mu, sigma = self.comm(inputs)
+		if test_mode:
+			mu = mu.reshape(bs, self.n_agents, self.n_agents, self.args.comm_embed_dim)
+			sigma = sigma.reshape(bs, self.n_agents, self.n_agents, self.args.comm_embed_dim)
+			if self.args.msg_delay_type == 'N_distribution' and test_mode:
+				latency = th.normal(mean=self.args.delay_value, std=self.args.delay_scale, size=(1, self.n_agents))
+			elif self.args.msg_delay_type == 'constant' and test_mode:
+				latency = th.full((1, self.args.n_agents), self.args.delay_value)
+			else:
+				latency = th.zeros((1, self.args.n_agents))
+			latency = th.max(th.tensor(0), latency).int()
+			for i in range(self.n_agents):
+				self.mu_buffer[i][t + latency[0][i].item()] = mu[:, i, :, :]
+				self.sigma_buffer[i][t + latency[0][i].item()] = sigma[:, i, :, :]
+			d_mu = th.zeros_like(mu)
+			d_sigma = th.zeros_like(sigma)
+			for i in range(self.n_agents):
+				if t in self.mu_buffer[i]:
+					d_mu[:, i, :, :] = self.mu_buffer[i].pop(t)
+					d_sigma[:, i, :, :] = self.sigma_buffer[i].pop(t)
+			mu = d_mu.reshape(bs * self.n_agents, self.n_agents * self.args.comm_embed_dim)
+			sigma = d_sigma.reshape(bs * self.n_agents, self.n_agents * self.args.comm_embed_dim)
 		normal_distribution = D.Normal(mu, sigma)
 		ms = normal_distribution.rsample()
 		if self.args.is_cur_mu:
@@ -301,7 +325,7 @@ class CateBCommFMAC:
 		return logits
 
 	def clean(self):
-		if self.args.env_args['print_rew']:
+		if getattr(self.args.env_args, 'print_rew', False):
 			self.c_step = 0
 			self.cut_mean_list = []
 			self.cut_mean_num_list = []

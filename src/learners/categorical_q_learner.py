@@ -2,6 +2,7 @@ import copy
 from components.episode_buffer import EpisodeBatch
 from modules.mixers.vdn import VDNMixer
 from modules.mixers.qmix import QMixer
+from utils.rl_utils import build_td_lambda_targets, build_q_lambda_targets
 import torch as th
 from torch.optim import RMSprop
 import torch.distributions as D
@@ -34,6 +35,8 @@ class CateQLearner:
 		self.target_mac = copy.deepcopy(mac)
 
 		self.log_stats_t = -self.args.learner_log_interval - 1
+
+		self.train_t = 0
 
 		self.s_mu = th.zeros(1)
 		self.s_sigma = th.ones(1)
@@ -112,16 +115,17 @@ class CateQLearner:
 		label_target_actions = label_target_max_out.max(dim=3, keepdim=True)[1]
 
 		# We don't need the first timesteps Q-Value estimate for calculating targets
-		target_mac_out = th.stack(target_mac_out[1:], dim=1)  # Concat across time
+		target_mac_out = th.stack(target_mac_out, dim=1)  # Concat across time
 
 		# Mask out unavailable actions
-		target_mac_out[avail_actions[:, 1:] == 0] = -9999999
+		target_mac_out[avail_actions == 0] = -9999999
 
 		# Max over target Q-Values
 		if self.args.double_q:
 			# Get actions that maximise live Q (for double q-learning)
-			mac_out[avail_actions == 0] = -9999999
-			cur_max_actions = mac_out[:, 1:].max(dim=3, keepdim=True)[1]
+			mac_out_detach = mac_out.clone().detach()
+			mac_out_detach[avail_actions == 0] = -9999999
+			cur_max_actions = mac_out_detach.max(dim=3, keepdim=True)[1]
 			target_max_qvals = th.gather(target_mac_out, 3, cur_max_actions).squeeze(3)
 		else:
 			target_max_qvals = target_mac_out.max(dim=3)[0]
@@ -129,10 +133,21 @@ class CateQLearner:
 		# Mix
 		if self.mixer is not None:
 			chosen_action_qvals = self.mixer(chosen_action_qvals, batch["state"][:, :-1])
-			target_max_qvals = self.target_mixer(target_max_qvals, batch["state"][:, 1:])
+			target_max_qvals = self.target_mixer(target_max_qvals, batch["state"])
 
 		# Calculate 1-step Q-Learning targets
-		targets = rewards + self.args.gamma * (1 - terminated) * target_max_qvals
+		if self.args.env != 'melting_pot' and self.args.env != 'meltingpot':
+			targets = rewards + self.args.gamma * (1 - terminated) * target_max_qvals[:, 1:]
+		else:
+			if getattr(self.args, 'q_lambda', False):
+				qvals = th.gather(target_mac_out, 3, batch["actions"]).squeeze(3)
+				qvals = self.target_mixer(qvals, batch["state"])
+
+				targets = build_q_lambda_targets(rewards, terminated, mask, target_max_qvals, qvals,
+												 self.args.gamma, self.args.td_lambda)
+			else:
+				targets = build_td_lambda_targets(rewards, terminated, mask, target_max_qvals,
+												  self.args.n_agents, self.args.gamma, self.args.td_lambda)
 
 		# Td-error
 		td_error = (chosen_action_qvals - targets.detach())
@@ -185,10 +200,11 @@ class CateQLearner:
 		grad_norm = th.nn.utils.clip_grad_norm_(self.params, self.args.grad_norm_clip)
 		self.optimiser.step()
 
+		self.train_t += 1
 		# Update target
-		if (episode_num - self.last_target_update_episode) / self.args.target_update_interval >= 1.0:
+		if (self.train_t - self.last_target_update_episode) / self.args.target_update_interval >= 1.0:
 			self._update_targets()
-			self.last_target_update_episode = episode_num
+			self.last_target_update_episode = self.train_t
 
 		if t_env - self.log_stats_t >= self.args.learner_log_interval:
 			self.logger.log_stat("loss", loss.item(), t_env)

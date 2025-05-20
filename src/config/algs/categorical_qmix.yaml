@@ -17,6 +17,7 @@ target_update_interval: 200
 
 # use the Q_Learner to train
 agent: "rnn" # Default rnn agent
+use_rnn: True
 agent_output_type: "q"
 learner: "cate_q_learner"
 double_q: True
@@ -35,7 +36,7 @@ comm_embed_dim: 3
 comm_method: "information_bottleneck_full"
 c_beta: 1.
 comm_beta: 0.001
-comm_entropy_beta: 1e-6
+comm_entropy_beta: 0.000001
 gate_loss_beta: 0.00001
 only_downstream: False
 use_IB: True
@@ -55,6 +56,14 @@ is_cur_mu: False
 is_rank_cut_mu: False
 cut_mu_thres: 1.
 cut_mu_rank_thres: 80.0
+
+td_lambda: 1
+q_lambda: False
+
+# none, constant, N_distribution
+msg_delay_type: "none"
+delay_value: 3
+delay_scale: 2
 
 test_is_cut: False
 test_is_cut_prob: False

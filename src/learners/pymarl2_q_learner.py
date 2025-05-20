@@ -9,7 +9,7 @@ import torch
 from torch.optim import RMSprop, Adam
 import numpy as np
 from utils.th_utils import get_parameters_num
-from rad.optim import RAD
+# from rad.optim import RAD
 
 
 class NQLearner:
@@ -34,8 +34,8 @@ class NQLearner:
 
         if self.args.optimizer == 'adam':
             self.optimiser = Adam(params=self.params, lr=args.lr, weight_decay=getattr(args, "weight_decay", 0))
-        elif self.args.optimizer == "rad":
-            self.optimiser = RAD(params=self.params, lr=args.lr, max_iter=30000)
+        # elif self.args.optimizer == "rad":
+        #     self.optimiser = RAD(params=self.params, lr=args.lr, max_iter=30000)
         else:
             self.optimiser = RMSprop(params=self.params, lr=args.lr, alpha=args.optim_alpha, eps=args.optim_eps)
 

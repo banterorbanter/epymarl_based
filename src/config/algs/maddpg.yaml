@@ -26,3 +26,5 @@ agent_output_type: "pi_logits"
 hidden_dim: 128
 critic_type: "maddpg_critic"
 name: "maddpg"
+
+t_max: 5050000

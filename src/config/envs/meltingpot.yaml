@@ -5,10 +5,10 @@ env_args:
   config_overrides: {}
   game_ascii_map: None
   substrate_name: "clean_up"
-  time_limit: 200
-  fps: 8
-  action_possibility: 0.1
-  action_latency: 5
+  time_limit: 100
+  fps: 60
+  action_possibility: 2
+  action_latency: 3
 
 
 common_reward: True
@@ -18,4 +18,4 @@ test_interval: 50000
 log_interval: 50000
 runner_log_interval: 10000
 learner_log_interval: 10000
-t_max: 2050000
+t_max: 5050000

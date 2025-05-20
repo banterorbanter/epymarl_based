@@ -97,3 +97,21 @@ class AgentMaker(Maker):
         """Entity agent using attention to merge obs."""
         from modules.agents.entity_attend_FiLMq_agent import EntityFiLMAgent
         return EntityFiLMAgent(*args, **kwargs)
+
+    @staticmethod
+    def make_maic_delay(*args, **kwargs) -> Agent:
+        """Entity agent using attention to merge obs."""
+        from modules.agents.maic_delay_agent import MAICDelayAgent
+        return MAICDelayAgent(*args, **kwargs)
+
+    @staticmethod
+    def make_cacom_delay(*args, **kwargs) -> Agent:
+        """Entity agent using attention to merge obs."""
+        from modules.agents.cacom_delay_agent import CACOM_Agent
+        return CACOM_Agent(*args, **kwargs)
+
+    @staticmethod
+    def make_tmac_p2p_comm_rnn_delay_msg(*args, **kwargs) -> Agent:
+        """Entity agent using attention to merge obs."""
+        from modules.agents.tmac_p2p_comm_rnn_msg_delay_agent import RnnMsgAgent
+        return RnnMsgAgent(*args, **kwargs)

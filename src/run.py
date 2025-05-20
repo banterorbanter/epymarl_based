@@ -4,6 +4,8 @@ import sys
 import gc
 import pprint
 import shutil
+import time
+
 import tqdm
 import threading
 import psutil
@@ -143,17 +145,20 @@ def run_sequential(args, logger):
     # mac = mac_REGISTRY[args.mac](buffer.scheme, groups, args)
     mac = MACMaker.make(args.mac, buffer.scheme, groups, args)
     logger.debug(f"Running with {mac.__class__.__name__}.")
-
+    # mac.load_models("D:\\work\\used_in_autodl\\models\\qmix_mm2_ad0_cd0")
     # Give runner the scheme
     runner.setup(scheme=scheme, groups=groups, preprocess=preprocess, mac=mac)
 
     # Learner
     # learner = le_REGISTRY[args.learner](mac, buffer.scheme, logger, args)
     learner = LearnerMaker.make(args.learner, mac, buffer.scheme, logger, args)
+    # learner.load_models("D:\\work\\used_in_autodl\\models\\qmix_mm2_ad0_cd0")
     logger.debug(f"Running with {learner.__class__.__name__}.")
 
     if args.use_cuda:
-        learner.to(args.device)
+        # sometimes use to
+        # learner.to(args.device)
+        learner.cuda()
 
     if args.checkpoint_path != "":
         timesteps = []
@@ -384,7 +389,7 @@ def args_sanity_check(config, logger):
         ) * config["batch_size_run"]
 
     # Check entity scheme availability.
-    entity_env_implemented_list = ["sc2v2", "emulate_sc2v2"]
+    entity_env_implemented_list = ["sc2v2", "emulate_sc2v2", "meltingpot"]
     if config.get("entity_scheme", False) and config["env"] not in entity_env_implemented_list:
         logger.critical(f"Entity scheme is not available in selected env: {config['env']}")
         raise NotImplementedError(f"Entity scheme is only available in {entity_env_implemented_list}. Selected env: {config['env']}")

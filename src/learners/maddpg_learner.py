@@ -7,7 +7,7 @@ from torch.optim import Adam
 from components.episode_buffer import EpisodeBatch
 from components.standarize_stream import RunningMeanStd
 from controllers.maddpg_controller import gumbel_softmax
-from modules.critics import CriticMaker
+from utils.maker import CriticMaker
 
 
 class MADDPGLearner:
@@ -235,11 +235,11 @@ class MADDPGLearner:
         ):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
-    def cuda(self):
-        self.mac.to(self.args.device)
-        self.target_mac.to(self.args.device)
-        self.critic.to(self.args.device)
-        self.target_critic.to(self.args.device)
+    def to(self, device):
+        self.mac.to(device)
+        self.target_mac.to(device)
+        self.critic.to(device)
+        self.target_critic.to(device)
 
     def save_models(self, path):
         self.mac.save_models(path)

@@ -65,3 +65,21 @@ class EnvMaker(Maker):
         from envs.meltingpot_wrapper import MeltingPotWrapper
 
         return MeltingPotWrapper(*args, **kwargs)
+    
+    @staticmethod
+    def make_sc2v2delay(*args, **kwargs) -> MultiAgentEnv:
+        from envs.smacv2_delay_wrapper import SMACv2DelayWrapper
+
+        return SMACv2DelayWrapper(*args, **kwargs)
+
+    @staticmethod
+    def make_sc2delay(*args, **kwargs) -> MultiAgentEnv:
+        from envs.smac_delay_wrapper import SMACDelayWrapper
+
+        return SMACDelayWrapper(*args, **kwargs)
+
+    @staticmethod
+    def make_traffic_junction(*args, **kwargs) -> MultiAgentEnv:
+        from envs.traffic_jam.traffic_junction import Traffic_JunctionEnv
+
+        return Traffic_JunctionEnv(*args, **kwargs)

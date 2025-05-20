@@ -254,14 +254,11 @@ function Cleaner:registerUpdaters(updaterRegistry)
     local actions = playerVolatileVariables.actions
     -- Execute the beam if applicable.
     if self.gameObject:getState() == aliveState then
-      local globalData = self.gameObject.simulation:getSceneObject():getComponent(
-      'GlobalData')
-      local player_index = self.gameObject:getComponent('Avatar'):getIndex()
       if self._config.cooldownTime >= 0 then
         if self._coolingTimer > 0 then
           self._coolingTimer = self._coolingTimer - 1
         else
-          if actions['fireClean'] == 1 and globalData.playersWhoWannaAte(player_index):val() == 0 then
+          if actions['fireClean'] == 1 then
             self._coolingTimer = self._config.cooldownTime
             self.gameObject:hitBeam(
                 'cleanHit', self._config.beamLength, self._config.beamRadius)
@@ -446,33 +443,6 @@ function Edible:onEnter(enteringGameObject, contactName)
       -- Reward the player who ate the edible.
       local avatarComponent = enteringGameObject:getComponent('Avatar')
       -- Trigger role-specific logic if applicable.
-      player_index = avatarComponent:getIndex()
-      local globalData = self.gameObject.simulation:getSceneObject():getComponent(
-      'GlobalData')
-      if globalData.playersWhoWannaAte(player_index):val() == 0 then
-        avatarComponent:disallowMovement()
-        globalData:setWannaAte(player_index, 1)
-        globalData.playerTarget1[player_index] = self
-        globalData.playerTarget2[player_index] = enteringGameObject
-        globalData.playerTarget3[player_index] = contactName
-      end
---       if enteringGameObject:hasComponent('Taste') then
---         enteringGameObject:getComponent('Taste'):consumed(
---           self._config.rewardForEating)
---       else
---         avatarComponent:addReward(self._config.rewardForEating)
---       end
---       events:add('edible_consumed', 'dict',
---                  'player_index', avatarComponent:getIndex())  -- int
---       -- Change the edible to its wait (disabled) state.
---       self.gameObject:setState(self._waitState)
-    end
-  end
-end
-
-function Edible:selfErase(enteringGameObject, contactName)
-  if contactName == 'avatar' then
-    if self.gameObject:getState() == self._liveState then
       if enteringGameObject:hasComponent('Taste') then
         enteringGameObject:getComponent('Taste'):consumed(
           self._config.rewardForEating)
@@ -486,6 +456,7 @@ function Edible:selfErase(enteringGameObject, contactName)
     end
   end
 end
+
 
 --[[ The Taste component assigns specific roles to agents. Not used in defaults.
 ]]
@@ -554,32 +525,13 @@ end
 
 function GlobalData:reset()
   local numPlayers = self.gameObject.simulation:getNumPlayers()
-  self.playersWhoWannaAte = tensor.Tensor(numPlayers):fill(0)
+
   self.playersWhoCleanedThisStep = tensor.Tensor(numPlayers):fill(0)
   self.playersWhoAteThisStep = tensor.Tensor(numPlayers):fill(0)
-  self.playerTarget1 = {}
-  self.playerTarget2 = {}
-  self.playerTarget3 = {}
-  self.wannaLimit = 32
 end
 
 function GlobalData:registerUpdaters(updaterRegistry)
   local function resetCumulants()
-    local numPlayers = self.gameObject.simulation:getNumPlayers()
-    for playerIndex = 1, numPlayers do
-      local sim = self.gameObject.simulation
-      avatarComponent = sim:getAvatarFromIndex(playerIndex):getComponent('Avatar')
-      if self.playersWhoWannaAte(playerIndex):val() == 1 then
-        avatarComponent:allowMovement()
-        self.playerTarget1[player_index]:selfErase(self.playerTarget2[player_index], self.playerTarget3[player_index])
-        self.playersWhoWannaAte(playerIndex):val(self.playersWhoWannaAte(playerIndex):val() - 1)
-      elseif self.playersWhoWannaAte(playerIndex):val() > 1 then
-        self.playersWhoWannaAte(playerIndex):val(self.playersWhoWannaAte(playerIndex):val() - 1)
-      end
---       if self.playersWhoWannaAte(playerIndex):val() % 2 == 0 then
---         self.playersWhoWannaAte(playerIndex):val((self.playersWhoWannaAte(playerIndex):val() * 2 + 0) % self.wannaLimit)
---       end
-    end
     self.playersWhoCleanedThisStep:fill(0)
     self.playersWhoAteThisStep:fill(0)
   end
@@ -597,10 +549,6 @@ function GlobalData:setAteThisStep(playerIndex)
   self.playersWhoAteThisStep(playerIndex):val(1)
 end
 
-function GlobalData:setWannaAte(playerIndex, wanna)
---   self.playersWhoWannaAte(playerIndex):val((self.playersWhoWannaAte(playerIndex):val() * 2 + wanna) % self.wannaLimit)
-  self.playersWhoWannaAte(playerIndex):val(self.playersWhoWannaAte(playerIndex):val() + wanna)
-end
 
 local AllNonselfCumulants = class.Class(component.Component)
 

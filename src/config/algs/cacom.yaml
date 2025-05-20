@@ -1,0 +1,112 @@
+# --- QMIX specific parameters ---
+
+save_model: True # Save the models to disk
+save_model_interval: 100_000 # Save models after this many timesteps
+
+# use epsilon greedy action selector
+action_selector: "epsilon_greedy"
+epsilon_start: 1.0
+epsilon_finish: 0.05
+epsilon_anneal_time: 100000
+
+# batch_size: 128
+
+t_max: 10050000
+
+runner: "parallel"
+batch_size_run: 8 # Number of environments to run in parallel
+
+buffer_size: 5000
+
+# update the target network every {} episodes
+target_update_interval: 200
+
+# use the Q_Learner to train
+agent_output_type: "q"
+double_q: True
+mixer: "qmix"
+mixing_embed_dim: 32
+hypernet_layers: 2
+hypernet_embed: 64
+
+mac: "cacom_mac"
+agent: "cacom_delay"
+learner: "cacom_learner"
+
+latent_dim: 8
+attention_dim: 32
+nn_hidden_size: 64
+mi_loss_weight: 0.001
+entropy_loss_weight: 0.01
+msg_l1_reg_loss_weight: 0
+var_floor: 0.002
+log_weights: True
+
+name: "cacom"
+
+pred_weight: 0.1
+discrete_bits: 2
+nn_hidden_multi: 4
+start_train_gate: 200_000
+cut_off_threshold: 0.0
+train_gate_intervel: 10_000
+gate_lr: 0.0001 # Learning rate for agents
+
+td_lambda: 1
+q_lambda: False
+
+# none, constant, N_distribution
+msg_delay_type: "none"
+delay_value: 3
+delay_scale: 2
+
+encode_dim: 8
+request_dim: 12
+response_dim: 8
+# clean up
+# obs_segs:
+#   - - 11
+#     - 11
+#   - - 1
+#     - 8
+#   - - 1
+#     - 7
+
+# smac v2
+# obs_segs:
+#   - - 1
+#     - 4
+#   - - 5
+#     - 9
+#   - - 4
+#     - 9
+#   - - 1
+#     - 7
+#   - - 1
+#     - 6
+#   - - 1
+#     - 10
+
+# smac changed by number
+obs_segs:
+ - - 1
+   - 4
+ - - 12
+   - 8
+ - - 9
+   - 8
+ - - 1
+   - 4
+ - - 1
+   - 18
+ - - 1
+   - 10
+
+# traffic junction
+#obs_segs:
+#  - - 1
+#    - 149
+#  - - 1
+#    - 2
+#  - - 1
+#    - 20

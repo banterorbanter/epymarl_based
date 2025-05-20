@@ -6,8 +6,7 @@ from torch.optim import Adam
 
 from components.episode_buffer import EpisodeBatch
 from components.standarize_stream import RunningMeanStd
-from modules.critics import CriticMaker
-
+from utils.maker import CriticMaker
 
 class PPOLearner:
     def __init__(self, mac, scheme, logger, args):
@@ -246,11 +245,11 @@ class PPOLearner:
         ):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
-    def cuda(self):
-        self.old_mac.to(self.args.device)
-        self.mac.to(self.args.device)
-        self.critic.to(self.args.device)
-        self.target_critic.to(self.args.device)
+    def to(self, device):
+        self.old_mac.to(device)
+        self.mac.to(device)
+        self.critic.to(device)
+        self.target_critic.to(device)
 
     def save_models(self, path):
         self.mac.save_models(path)

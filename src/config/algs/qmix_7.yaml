@@ -1,0 +1,44 @@
+# --- specific parameters ---
+
+# use epsilon greedy action selector
+action_selector: "epsilon_greedy"
+epsilon_start: 1.0
+epsilon_finish: 0.05
+epsilon_anneal_time: 50000
+mac: "basic_mac_7" # Basic controller
+runner: "parallel"
+batch_size_run: 8
+
+optimizer: 'adamW'
+t_max: 10050000
+
+buffer_size: 5000
+
+td_lambda: 1
+q_lambda: False
+
+# update the target network every {} episodes
+target_update_interval: 200
+
+# use the Q_Learner to train
+agent_output_type: "q"
+learner: "q_learner_7"
+double_q: True
+mixer: "qmix"
+agent: "rnn"
+mixing_embed_dim: 32
+hypernet_embed: 64
+use_rnn: True
+
+# none, constant, Ndistribution
+msg_delay_type: "constant"
+delay_value: 1
+delay_scale: 2
+
+# --- protocol hyperparameters ---
+loss_level: 'none' # loss level during evaluation, there are four choices: none, light, medium, heavy
+fresh_limit: 6 # validation period for the messages in the received message buffer
+transmit_limit: 6 # if the transmitter has not sent within this limit, the transmitter will send
+delta: 0.05 # delta in Algorithm 1
+
+name: "tmc_parallel"

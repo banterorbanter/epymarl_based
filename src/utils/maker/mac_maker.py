@@ -62,3 +62,27 @@ class MACMaker(Maker):
         """A more efficient BasicMAC along with new q learner."""
         from controllers.new_basic_controller import BasicMAC
         return BasicMAC(*args, **kwargs)
+
+    @staticmethod
+    def make_maic_mac(*args, **kwargs) -> MAC:
+        """Entity agent using attention to merge obs."""
+        from controllers.maic_controller import MAICMAC
+        return MAICMAC(*args, **kwargs)
+
+    @staticmethod
+    def make_cacom_mac(*args, **kwargs) -> MAC:
+        """Entity agent using attention to merge obs."""
+        from controllers.cacom_controller import CACOM_MAC
+        return CACOM_MAC(*args, **kwargs)
+
+    @staticmethod
+    def make_tmac_p2p_comm_mac(*args, **kwargs) -> MAC:
+        """Entity agent using attention to merge obs."""
+        from controllers.tmac_p2p_comm_controller import VffacMAC
+        return VffacMAC(*args, **kwargs)
+
+    @staticmethod
+    def make_basic_mac_7(*args, **kwargs) -> MAC:
+        """A more efficient BasicMAC along with new q learner."""
+        from controllers.basic_controller_7 import BasicMAC_7
+        return BasicMAC_7(*args, **kwargs)

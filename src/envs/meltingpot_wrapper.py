@@ -18,6 +18,7 @@ Use `Q and E` to turn the character.
 Use `SPACE` to fire the zapper.
 Use `TAB` to switch between players.
 """
+import queue
 import threading
 import collections
 import enum
@@ -366,48 +367,45 @@ class MeltingPotWrapper(MultiAgentEnv):
         self.action_possibility = action_possibility
         self.action_timer = self.n_agents * [0]
         self.action_recoder = self.n_agents * [0]
+        # self.action_map = self.n_agents * [self.get_state_size() * [0]]
         self.latency = action_latency
+        self.action_queue = np.zeros((7, 205, 3))
+
+        self.punish_t = self.episode_limit
 
     def actions_process(self, actions):
         new_actions = []
         action_dict = {1: 101, 2: 114, 3: 125, 4: 112}
+        dis_dict = {1: -30, 2: 1, 3: 30, 4: -1}
+
         for i, action in enumerate(actions):
+            tmp_1 = (self.curr_scene_description[str(i + 1)]['global_position'][0]) * 30 + \
+                    (self.curr_scene_description[str(i + 1)]['global_position'][1])
+            tmp_2 = 0
+            tmp_3 = 0
+            if 0 < action <= 4:
+                t_tmp = (action + self.curr_scene_description[str(i + 1)]['orientation'])
+                if t_tmp > 4:
+                    t_tmp -= 4
+                tmp_2 = (self.curr_scene_description[str(i + 1)]['global_position'][0]) * 30 + \
+                        (self.curr_scene_description[str(i + 1)]['global_position'][1]) + dis_dict[t_tmp.item()]
             if (0 < action <= 4) and self.curr_scene_description[str(i + 1)]['observation'][
-                action_dict[action.item()]] == 'A' and self.action_timer[i] == 0:
+                action_dict[action.item()]] == 'A' and self.latency > 0:
+                tmp_3 = max(0, int(np.random.normal(loc=self.latency, scale=self.action_possibility)))
+                tmp_2 *= -1
                 self.action_recoder[i] = action
-                self.action_timer[i] = self.latency + 1
-            # if action == 4 and self.curr_scene_description[str(i + 1)]['observation'][103 + 9] == 'A' and \
-            #         self.action_timer[i] == 0:
-            #     self.action_recoder[i] = action
-            #     self.action_timer[i] = self.latency + 1
-            # elif action == 2 and self.curr_scene_description[str(i + 1)]['observation'][105 + 9] == 'A' and \
-            #         self.action_timer[i] == 0:
-            #     self.action_recoder[i] = action
-            #     self.action_timer[i] = self.latency + 1
-            # elif action == 1 and self.curr_scene_description[str(i + 1)]['observation'][93 + 8] == 'A' and \
-            #         self.action_timer[i] == 0:
-            #     self.action_recoder[i] = action
-            #     self.action_timer[i] = self.latency + 1
-            # elif action == 3 and self.curr_scene_description[str(i + 1)]['observation'][115 + 10] == 'A' and \
-            #         self.action_timer[i] == 0:
-            #     self.action_recoder[i] = action
-            #     self.action_timer[i] = self.latency + 1
+                action = 0
 
-            if self.action_recoder[i] > 0 and \
-                    self.curr_scene_description[str(i + 1)]['observation'][
-                        action_dict[self.action_recoder[i].item()]] != 'A':
-                self.action_timer[i] = 0
-                self.action_recoder[i] = 0
+            self.action_queue[i][self.time.days][0] = tmp_1
+            self.action_queue[i][self.time.days][1] = tmp_2
+            self.action_queue[i][self.time.days][2] = tmp_3
+            if tmp_2 < 0 and self.latency > 0:
+                for j in range(self.time.days):
+                    if (self.action_queue[i][j][0] == self.action_queue[i][self.time.days][0] and
+                        self.action_queue[i][j][1] == self.action_queue[i][self.time.days][1]) and \
+                            self.time.days - j == self.action_queue[i][j][2]:
+                        action = self.action_recoder[i]
 
-            if self.action_timer[i] > 0:
-                randn = np.random.rand()
-                if self.action_timer[i] == 1 or randn < self.action_possibility:
-                    self.action_timer[i] = 1
-                    action = self.action_recoder[i]
-                    self.action_recoder[i] = 0
-                else:
-                    action = 0
-                self.action_timer[i] -= 1
             new_actions.append(action)
         return new_actions
 
@@ -517,10 +515,15 @@ class MeltingPotWrapper(MultiAgentEnv):
         self.curr_scene_description = description
         self.curr_global_map = curr_global_map
 
-        if self.time.days == self.episode_limit:
-            terminate = True
+        a_cnt = 0
+        for i in range(len(self.curr_global_map)):
+            for j in range(len(self.curr_global_map[i])):
+                if self.curr_global_map[i][j] == 'w' and self.prev_global_map[i][j] == 'D':
+                    a_cnt += 1
 
-        return self.get_obs(), reward, self.game_steps >= self.episode_limit, False, self.get_env_info()
+        # return reward - min(self.time.days,
+        #                     self.punish_t) * 0.0001 + a_cnt * 0.0002, self.time.days >= self.episode_limit, self.get_env_info()
+        return reward + a_cnt * 0.1, self.time.days >= self.episode_limit, self.get_env_info()
 
     def get_obs(self):
         """Returns all agent observations in a list"""
@@ -538,8 +541,27 @@ class MeltingPotWrapper(MultiAgentEnv):
         scene_description = self.curr_scene_description[str(agent_id + 1)]['observation']
         obs = []
         for word in scene_description:
+            if word == 'S':
+                code = 1
+            elif word == 'w':
+                code = 2
+            elif word == 'D':
+                code = 3
+            elif word == 'G':
+                code = 4
+            elif word == 'A':
+                code = 5
+            elif word == 'W':
+                code = 7
+            else:
+                code = 6
             if word != '\n':
-                obs.append(ord(word) / 100)
+                # for i in range(7):
+                    # if (i + 1) == code:
+                    #     obs.append(1)
+                    # else:
+                    #     obs.append(0)
+                obs.append(code)
         return obs
 
     def get_obs_size(self):
@@ -550,8 +572,28 @@ class MeltingPotWrapper(MultiAgentEnv):
         state = []
         for words in self.curr_global_map:
             for word in words:
-                state.append(ord(word) / 100)
-        return [state]
+                if word == 'S':
+                    code = 1
+                elif word == 'w':
+                    code = 2
+                elif word == 'D':
+                    code = 3
+                elif word == 'G':
+                    code = 4
+                elif word == 'A':
+                    code = 5
+                elif word == 'W':
+                    code = 7
+                else:
+                    code = 6
+                if word != '\n':
+                    # for i in range(7):
+                    #     if (i + 1) == code:
+                    #         state.append(1)
+                    #     else:
+                    #         state.append(0)
+                    state.append(code)
+        return state
 
     def get_state_size(self):
         """Returns the shape of the state"""
@@ -581,6 +623,10 @@ class MeltingPotWrapper(MultiAgentEnv):
         self.time = datetime.timedelta()
         self.game_steps = 0
         self.step(self.n_agents * [0])
+        self.action_queue = np.zeros((7, 205, 3))
+
+        self.punish_t = self.episode_limit
+        return self.get_obs(), self.get_state()
 
     def render(self):
         pass

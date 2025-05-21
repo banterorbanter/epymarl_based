@@ -91,3 +91,8 @@ class MACMaker(Maker):
         """NDQ."""
         from controllers.cate_broadcast_comm_controller_full import CateBCommFMAC
         return CateBCommFMAC(*args, **kwargs)
+
+    def make_masia_mac(*args, **kwargs) -> MAC:
+        """MASIA."""
+        from controllers.masia_controller import MASIAMAC
+        return MASIAMAC(*args, **kwargs)

@@ -115,3 +115,9 @@ class AgentMaker(Maker):
         """Entity agent using attention to merge obs."""
         from modules.agents.tmac_p2p_comm_rnn_msg_delay_agent import RnnMsgAgent
         return RnnMsgAgent(*args, **kwargs)
+
+    @staticmethod
+    def make_masia(*args, **kwargs) -> Agent:
+        """Entity agent using attention to merge obs."""
+        from modules.agents.masia_agent import MASIAAgent
+        return MASIAAgent(*args, **kwargs)

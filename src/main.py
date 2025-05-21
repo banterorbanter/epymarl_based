@@ -19,6 +19,7 @@ except ImportError:
     from collections.abc import Mapping    # from python 3.10
 
 from run import run
+from msra_run import msra_run
 from utils.custom_logging import PyMARLLogger
 
 from utils.torch_optimizer import optimize_tensor_display
@@ -58,7 +59,11 @@ def my_main(_run, _config, _log):
     config["env_args"]["seed"] = config["seed"]
 
     # run the framework
-    run(_run, config, _log)
+    # if use masia, use msra_run
+    if "masia" in config["name"]:
+        msra_run(_run, config, _log)
+    else:
+        run(_run, config, _log)
 
 
 def _get_config(params, arg_name, subfolder):

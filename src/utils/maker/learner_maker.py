@@ -103,3 +103,9 @@ class LearnerMaker(Maker):
         """NDQ."""
         from learners.categorical_q_learner import CateQLearner
         return CateQLearner(*args, **kwargs)
+
+    @staticmethod
+    def make_masia_learner(*args, **kwargs) -> 'Learner':
+        """MASIA."""
+        from learners.masia_learner import MASIALearner
+        return MASIALearner(*args, **kwargs)
